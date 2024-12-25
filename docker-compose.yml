@@ -1,0 +1,16 @@
+
+version: '3'
+services:
+  headless-browser:
+    build: .
+    ports:
+      - "5900:5900"
+    environment:
+      - DISPLAY=:99
+    restart: unless-stopped
+    # Add DNS configuration
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    # Ensure host networking is properly configured
+    network_mode: "bridge"
