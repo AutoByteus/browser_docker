@@ -5,6 +5,7 @@ services:
     build: .
     ports:
       - "5900:5900"
+      - "9222:9222"
     environment:
       - DISPLAY=:99
     restart: unless-stopped
