@@ -74,6 +74,6 @@ RUN chown -R vncuser:vncuser /home/vncuser && \
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 5900
+EXPOSE 5900 9222
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
