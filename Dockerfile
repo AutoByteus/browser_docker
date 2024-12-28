@@ -1,3 +1,4 @@
+
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -24,8 +25,14 @@ RUN apt-get update && apt-get install -y \
     libxtst-dev \
     dbus \
     dos2unix \
+    python3 \
+    python3-pip \
+    socat \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Install pip packages
+RUN pip3 install --no-cache-dir fastapi uvicorn
 
 # Install Chrome browser
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
@@ -86,6 +93,10 @@ RUN mkdir -p /run/user/1000 && \
 # Set XDG_RUNTIME_DIR environment variable
 ENV XDG_RUNTIME_DIR=/run/user/1000
 
+# Create workspace directory
+RUN mkdir -p /home/vncuser/workspace && \
+    chown -R vncuser:vncuser /home/vncuser/workspace
+
 # Copy supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -96,8 +107,12 @@ COPY entrypoint.sh /entrypoint.sh
 RUN dos2unix /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
+# Copy the application folder
+COPY app /home/vncuser/workspace/app
+RUN chown -R vncuser:vncuser /home/vncuser/workspace/app
+
 # Expose VNC and debugging ports
-EXPOSE 5900 9222
+EXPOSE 5900 9223 8000
 
 # Set the entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

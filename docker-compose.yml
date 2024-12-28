@@ -1,5 +1,5 @@
-version: '3.8'
 
+version: '3.8'
 services:
   vnc:
     build: .
@@ -9,7 +9,8 @@ services:
       - seccomp=unconfined
     ports:
       - "5900:5900"
-      - "9224:9222"
+      - "9223:9223"
+      - "8020:8000"
     environment:
       - DISPLAY=:99
     restart: unless-stopped
