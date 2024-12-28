@@ -1,4 +1,3 @@
-
 version: '3.8'
 
 services:
@@ -10,7 +9,7 @@ services:
       - seccomp=unconfined
     ports:
       - "5900:5900"
-      - "9222:9222"
+      - "9224:9222"
     environment:
       - DISPLAY=:99
     restart: unless-stopped

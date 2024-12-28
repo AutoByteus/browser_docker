@@ -1,9 +1,8 @@
-
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
-ENV CHROME_FLAGS="--disable-dev-shm-usage"
+ENV CHROME_FLAGS="--disable-dev-shm-usage --no-sandbox --disable-gpu --disable-software-rasterizer"
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -23,6 +22,8 @@ RUN apt-get update && apt-get install -y \
     libx11-dev \
     libxext-dev \
     libxtst-dev \
+    dbus \
+    dos2unix \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -59,6 +60,11 @@ RUN mkdir -p /tmp/.X11-unix && \
     chmod 1777 /dev/shm && \
     chown -R vncuser:vncuser /tmp/.X11-unix
 
+# Setup DBus directories and permissions
+RUN mkdir -p /run/dbus && \
+    chown messagebus:messagebus /run/dbus && \
+    dbus-uuidgen > /etc/machine-id
+
 # Setup Xauthority
 RUN touch /home/vncuser/.Xauthority && \
     chown vncuser:vncuser /home/vncuser/.Xauthority && \
@@ -72,8 +78,26 @@ RUN mkdir -p /var/log/supervisor && \
 RUN chown -R vncuser:vncuser /home/vncuser && \
     chown vncuser:vncuser /var/run/supervisor.sock
 
+# Create XDG_RUNTIME_DIR and set permissions
+RUN mkdir -p /run/user/1000 && \
+    chown -R vncuser:vncuser /run/user/1000 && \
+    chmod -R 700 /run/user/1000
+
+# Set XDG_RUNTIME_DIR environment variable
+ENV XDG_RUNTIME_DIR=/run/user/1000
+
+# Copy supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy the entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+
+# Ensure the script has Unix line endings and is executable
+RUN dos2unix /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+# Expose VNC and debugging ports
 EXPOSE 5900 9222
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Set the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
