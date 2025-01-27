@@ -98,7 +98,7 @@ RUN mkdir -p /home/vncuser/workspace && \
 
 WORKDIR /home/vncuser/workspace
 
-COPY supervisord.base.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 
 RUN dos2unix /entrypoint.sh && \
