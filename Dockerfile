@@ -1,4 +1,4 @@
-
+# Base image for all architectures
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -28,19 +28,18 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     socat \
+    git \
+    xclip \
+    software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pip packages
-RUN pip3 install --no-cache-dir fastapi uvicorn
-
-# Install Chrome browser
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install Chromium using PPA
+RUN add-apt-repository -y ppa:xtradeb/apps && \
+    apt-get update && \
+    apt-get install -y chromium && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Setup supervisor
 RUN mkdir -p /var/run && \
@@ -84,7 +83,7 @@ RUN mkdir -p /var/log/supervisor && \
 # Fix permissions
 RUN chown -R vncuser:vncuser /home/vncuser && \
     chown vncuser:vncuser /var/run/supervisor.sock
-
+    
 # Create XDG_RUNTIME_DIR and set permissions
 RUN mkdir -p /run/user/1000 && \
     chown -R vncuser:vncuser /run/user/1000 && \
@@ -93,26 +92,18 @@ RUN mkdir -p /run/user/1000 && \
 # Set XDG_RUNTIME_DIR environment variable
 ENV XDG_RUNTIME_DIR=/run/user/1000
 
-# Create workspace directory
+# Create workspace directory for VNC
 RUN mkdir -p /home/vncuser/workspace && \
     chown -R vncuser:vncuser /home/vncuser/workspace
 
-# Copy supervisor configuration
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+WORKDIR /home/vncuser/workspace
 
-# Copy the entrypoint script
+COPY supervisord.base.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 
-# Ensure the script has Unix line endings and is executable
 RUN dos2unix /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
-# Copy the application folder
-COPY app /home/vncuser/workspace/app
-RUN chown -R vncuser:vncuser /home/vncuser/workspace/app
+EXPOSE 5900 9223
 
-# Expose VNC and debugging ports
-EXPOSE 5900 9223 8000
-
-# Set the entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

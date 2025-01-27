@@ -10,7 +10,6 @@ services:
     ports:
       - "5900:5900"
       - "9223:9223"
-      - "8020:8000"
     environment:
       - DISPLAY=:99
     restart: unless-stopped
