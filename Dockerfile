@@ -1,9 +1,14 @@
 # Base image for all architectures
 FROM ubuntu:22.04
 
+ARG USER_UID=1000
+ARG USER_GID=1000
+ENV USER_UID=${USER_UID}
+ENV USER_GID=${USER_GID}
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
-ENV CHROME_FLAGS="--disable-dev-shm-usage --no-sandbox --disable-gpu --disable-software-rasterizer"
+ENV XDG_RUNTIME_DIR=/run/user/${USER_UID}
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -41,60 +46,51 @@ RUN add-apt-repository -y ppa:xtradeb/apps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Setup supervisor
-RUN mkdir -p /var/run && \
-    mkdir -p /var/log/supervisor && \
-    touch /var/run/supervisor.sock && \
-    chmod 700 /var/run/supervisor.sock
-
-# Create non-root user
-RUN useradd -m -s /bin/bash vncuser && \
+# Create non-root user with explicit UID/GID and add to sudo group
+RUN groupadd -g ${USER_GID} vncuser && \
+    useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash vncuser && \
+    usermod -aG sudo vncuser && \
     echo "vncuser:vncuser" | chpasswd && \
-    adduser vncuser sudo && \
-    echo "vncuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    echo "vncuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vncuser && \
+    chmod 0440 /etc/sudoers.d/vncuser
+
+# Setup supervisor with correct permissions
+RUN mkdir -p /var/log/supervisor && \
+    chown -R vncuser:vncuser /var/log/supervisor && \
+    chmod 755 /var/log/supervisor
 
 # Create .vnc directory and set password
 RUN mkdir -p /home/vncuser/.vnc && \
     x11vnc -storepasswd mysecretpassword /home/vncuser/.vnc/passwd && \
-    chown -R vncuser:vncuser /home/vncuser/.vnc && \
-    chmod -R 755 /home/vncuser/.vnc
+    chown -R ${USER_UID}:${USER_GID} /home/vncuser/.vnc && \
+    chmod 700 /home/vncuser/.vnc && \
+    chmod 600 /home/vncuser/.vnc/passwd
 
 # Setup X11 and shared memory permissions
 RUN mkdir -p /tmp/.X11-unix && \
     chmod 1777 /tmp/.X11-unix && \
     mkdir -p /dev/shm && \
     chmod 1777 /dev/shm && \
-    chown -R vncuser:vncuser /tmp/.X11-unix
+    chown -R ${USER_UID}:${USER_GID} /tmp/.X11-unix
 
 # Setup DBus directories and permissions
 RUN mkdir -p /run/dbus && \
     chown messagebus:messagebus /run/dbus && \
     dbus-uuidgen > /etc/machine-id
 
-# Setup Xauthority
+# Setup Xauthority with secure permissions
 RUN touch /home/vncuser/.Xauthority && \
-    chown vncuser:vncuser /home/vncuser/.Xauthority && \
+    chown ${USER_UID}:${USER_GID} /home/vncuser/.Xauthority && \
     chmod 600 /home/vncuser/.Xauthority
 
-# Create log directory for x11vnc
-RUN mkdir -p /var/log/supervisor && \
-    chown -R vncuser:vncuser /var/log/supervisor
+# Create runtime directory with dynamic UID
+RUN mkdir -p ${XDG_RUNTIME_DIR} && \
+    chown -R ${USER_UID}:${USER_GID} ${XDG_RUNTIME_DIR} && \
+    chmod 700 ${XDG_RUNTIME_DIR}
 
-# Fix permissions
-RUN chown -R vncuser:vncuser /home/vncuser && \
-    chown vncuser:vncuser /var/run/supervisor.sock
-    
-# Create XDG_RUNTIME_DIR and set permissions
-RUN mkdir -p /run/user/1000 && \
-    chown -R vncuser:vncuser /run/user/1000 && \
-    chmod -R 700 /run/user/1000
-
-# Set XDG_RUNTIME_DIR environment variable
-ENV XDG_RUNTIME_DIR=/run/user/1000
-
-# Create workspace directory for VNC
+# Create workspace directory
 RUN mkdir -p /home/vncuser/workspace && \
-    chown -R vncuser:vncuser /home/vncuser/workspace
+    chown -R ${USER_UID}:${USER_GID} /home/vncuser/workspace
 
 WORKDIR /home/vncuser/workspace
 
@@ -102,7 +98,8 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 
 RUN dos2unix /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+    chmod +x /entrypoint.sh && \
+    chown vncuser:vncuser /entrypoint.sh /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 5900 9223
 

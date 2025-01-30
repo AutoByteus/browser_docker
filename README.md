@@ -1,7 +1,6 @@
+# Browser Environment with VNC Access
 
-# Headless Browser Environment with VNC Access
-
-This project provides a Docker-based headless browser environment with VNC access, allowing you to interact with a full Chrome browser instance remotely.
+This project provides a Docker-based Chrome browser environment with VNC access, allowing you to interact with a full Chrome browser instance remotely through a complete XFCE desktop environment.
 
 ## Prerequisites
 

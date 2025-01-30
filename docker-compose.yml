@@ -1,8 +1,8 @@
-
 version: '3.8'
 services:
   vnc:
     build: .
+    image: autobyteus-base
     cap_add:
       - SYS_ADMIN
     security_opt:
