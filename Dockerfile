@@ -46,6 +46,9 @@ RUN add-apt-repository -y ppa:xtradeb/apps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Install websockify for noVNC
+RUN pip3 install websockify
+
 # Create non-root user with explicit UID/GID and add to sudo group
 RUN groupadd -g ${USER_GID} vncuser && \
     useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash vncuser && \
@@ -59,12 +62,10 @@ RUN mkdir -p /var/log/supervisor && \
     chown -R vncuser:vncuser /var/log/supervisor && \
     chmod 755 /var/log/supervisor
 
-# Create .vnc directory and set password
+# Create .vnc directory (no password file created)
 RUN mkdir -p /home/vncuser/.vnc && \
-    x11vnc -storepasswd mysecretpassword /home/vncuser/.vnc/passwd && \
     chown -R ${USER_UID}:${USER_GID} /home/vncuser/.vnc && \
-    chmod 700 /home/vncuser/.vnc && \
-    chmod 600 /home/vncuser/.vnc/passwd
+    chmod 700 /home/vncuser/.vnc
 
 # Setup X11 and shared memory permissions
 RUN mkdir -p /tmp/.X11-unix && \
@@ -96,11 +97,12 @@ WORKDIR /home/vncuser/workspace
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
+COPY disable-screensaver.sh /home/vncuser/disable-screensaver.sh
 
-RUN dos2unix /entrypoint.sh && \
-    chmod +x /entrypoint.sh && \
-    chown vncuser:vncuser /entrypoint.sh /etc/supervisor/conf.d/supervisord.conf
+RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
+    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
+    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 5900 9223
+EXPOSE 5900 6080 9223
 
 ENTRYPOINT ["/entrypoint.sh"]
