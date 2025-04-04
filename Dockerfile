@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y \
     git \
     xclip \
     software-properties-common \
+    xdotool \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -98,10 +99,11 @@ WORKDIR /home/vncuser/workspace
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY disable-screensaver.sh /home/vncuser/disable-screensaver.sh
+COPY keep-display-alive.sh /home/vncuser/keep-display-alive.sh
 
-RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh /etc/supervisor/conf.d/supervisord.conf
+RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/keep-display-alive.sh && \
+    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/keep-display-alive.sh && \
+    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/keep-display-alive.sh /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 5900 6080 9223
 
