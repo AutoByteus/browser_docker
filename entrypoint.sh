@@ -22,5 +22,11 @@ chmod 755 /var/run/dbus
 mkdir -p "$(dirname /var/run/supervisor.sock)"
 chown vncuser:vncuser "$(dirname /var/run/supervisor.sock)"
 
+# Ensure locale environment variables are properly set
+if [ -f /etc/default/locale ]; then
+    . /etc/default/locale
+    export LANG LANGUAGE LC_ALL
+fi
+
 # Start supervisord as root
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf

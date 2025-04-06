@@ -9,6 +9,10 @@ ENV USER_GID=${USER_GID}
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
 ENV XDG_RUNTIME_DIR=/run/user/${USER_UID}
+# Add language environment variables
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -37,8 +41,19 @@ RUN apt-get update && apt-get install -y \
     xclip \
     software-properties-common \
     xdotool \
+    # Add fonts and locale packages
+    fonts-noto-cjk \
+    fonts-noto-cjk-extra \
+    fonts-wqy-microhei \
+    fonts-wqy-zenhei \
+    language-pack-zh-hans \
+    locales \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure locales to include Chinese
+RUN locale-gen en_US.UTF-8 zh_CN.UTF-8 && \
+    update-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
 # Install Chromium using PPA
 RUN add-apt-repository -y ppa:xtradeb/apps && \
