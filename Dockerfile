@@ -35,6 +35,7 @@ RUN apt-get update && apt-get install -y \
     socat \
     git \
     xclip \
+    copyq \
     software-properties-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -94,6 +95,9 @@ RUN mkdir -p /home/vncuser/workspace && \
     chown -R ${USER_UID}:${USER_GID} /home/vncuser/workspace
 
 WORKDIR /home/vncuser/workspace
+
+# Create a dedicated log file for CopyQ and set permissions
+RUN touch /home/vncuser/copyq.log && chown ${USER_UID}:${USER_GID} /home/vncuser/copyq.log
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh

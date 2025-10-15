@@ -9,81 +9,49 @@ This repository contains a Docker setup for a browser environment with VNC acces
 - Screen lock/screensaver disabled for uninterrupted operation
 - Multi-architecture support (AMD64 and ARM64)
 
-## Publishing to Docker Hub
+## Building and Publishing to Docker Hub
 
-### Single Architecture Build (Legacy Method)
+This project uses Docker BuildX to create images. The script is optimized for both local development and publishing.
 
-Follow these steps to publish a single-architecture version of this image to Docker Hub:
+1.  **Set the Version**: Before building, update the `VERSION` file in this directory with the desired semantic version (e.g., `1.1.0`). This file is the single source of truth for versioning.
 
-1. Build the image locally:
-```bash
-docker-compose build
-```
+2.  **Ensure Docker BuildX is ready**:
+    ```bash
+    docker buildx version
+    ```
 
-2. Login to Docker Hub:
-```bash
-docker login
-```
-You'll be prompted for your Docker Hub username and password.
+3.  **Run the Build Script**: The script will automatically read the `VERSION` file and tag the image with both the specific version (e.g., `autobyteus/chrome-vnc:1.1.0`) and `latest`.
 
-3. Tag the image with your Docker Hub username:
-```bash
-docker tag autobyteus-base autobyteus/chrome-vnc:latest
-```
+    **For Local Development (Default):**
+    Running the script without any flags will build the image for your machine's architecture and load it directly into your local Docker daemon. The image will then be available in `docker images`.
+    ```bash
+    # Build for your local architecture and load into Docker
+    ./build-multi-arch.sh
+    ```
 
-4. Push to Docker Hub:
-```bash
-docker push autobyteus/chrome-vnc:latest
-```
+    **For Publishing:**
+    To build the multi-architecture image and push it to Docker Hub, use the `--push` flag. This requires you to be logged in via `docker login` first.
+    ```bash
+    # Build for all architectures and push to Docker Hub
+    ./build-multi-arch.sh --push
+    ```
 
-### Multi-Architecture Build (Recommended)
-
-To create an image that works on both x86 (Intel/AMD) and ARM (Apple Silicon M1/M2/M3) architectures:
-
-1. Make sure Docker BuildX is installed and enabled:
-```bash
-docker buildx version
-```
-
-2. Use the provided script to build and push a multi-architecture image:
-```bash
-# Build for multiple architectures but don't push yet
-./build-multi-arch.sh
-
-# Build and push to Docker Hub (requires docker login first)
-./build-multi-arch.sh --push
-
-# Build with a specific tag
-./build-multi-arch.sh --tag v1.0.0 --push
-
-# Build with no cache
-./build-multi-arch.sh --no-cache --push
-```
-
-This will create a manifest list on Docker Hub that allows users to pull one image that works across different CPU architectures.
+    **Other Options:**
+    ```bash
+    # Perform a clean build with no cache
+    ./build-multi-arch.sh --no-cache
+    ```
 
 ### Updating the Image
 
 When you make changes and want to update the published image:
 
-1. For single architecture:
-```bash
-# Rebuild with no cache
-docker-compose build --no-cache
-
-# Remove old images if needed
-docker rmi autobyteus-base:latest autobyteus/chrome-vnc:latest
-
-# Tag and push again
-docker tag autobyteus-base autobyteus/chrome-vnc:latest
-docker push autobyteus/chrome-vnc:latest
-```
-
-2. For multi-architecture:
-```bash
-# Rebuild and push with no cache
-./build-multi-arch.sh --no-cache --push
-```
+1. Update the version number in the `VERSION` file.
+2. Run the build script with the `--push` flag:
+   ```bash
+   # Rebuild and push with no cache
+   ./build-multi-arch.sh --no-cache --push
+   ```
 
 ## Using the Image
 
@@ -91,6 +59,8 @@ Once published, users can pull the image on any supported platform:
 
 ```bash
 docker pull autobyteus/chrome-vnc:latest
+# or to pull a specific version
+docker pull autobyteus/chrome-vnc:1.1.0
 ```
 
 The correct architecture will be automatically selected based on the host system.
