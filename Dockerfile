@@ -10,8 +10,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
 ENV XDG_RUNTIME_DIR=/run/user/${USER_UID}
 
-# Install required packages
-RUN apt-get update && apt-get install -y \
+# Layer 1: Set up software sources
+RUN apt-get update && \
+    apt-get install -y software-properties-common ca-certificates curl && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
+    add-apt-repository -y ppa:xtradeb/apps && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
+# Layer 2: Install all packages
+RUN apt-get update && \
+    apt-get install -y \
     dbus-x11 \
     dnsutils \
     iputils-ping \
@@ -20,7 +28,6 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     vim \
     wget \
-    curl \
     x11vnc \
     xfce4 \
     xfce4-terminal \
@@ -30,25 +37,26 @@ RUN apt-get update && apt-get install -y \
     libxtst-dev \
     dbus \
     dos2unix \
-    python3 \
-    python3-pip \
     socat \
     git \
     xclip \
     copyq \
-    software-properties-common \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    chromium \
+    # Python 3.11
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    # Node.js
+    nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Chromium using PPA
-RUN add-apt-repository -y ppa:xtradeb/apps && \
-    apt-get update && \
-    apt-get install -y chromium && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install websockify for noVNC
-RUN pip3 install websockify
+# Layer 3: Post-installation configuration
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
+    python3 -m ensurepip && \
+    python3 -m pip install --upgrade pip wheel setuptools && \
+    python3 -m pip install websockify uv && \
+    npm install -g yarn
 
 # Create non-root user with explicit UID/GID and add to sudo group
 RUN groupadd -g ${USER_GID} vncuser && \
