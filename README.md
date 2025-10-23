@@ -86,7 +86,7 @@ After building the image locally or pulling it from Docker Hub, you can easily s
 
     ```bash
     # Run VNC on host port 5901 and the debug port on 9224
-    ./run-container.sh --vnc-port 5901 --debug-port 9224
+    ./run-container.sh --vnc-port 5902 --debug-port 9224
     ```
 
     You can also specify a custom tag or container name:

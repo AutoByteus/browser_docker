@@ -66,8 +66,20 @@ RUN groupadd -g ${USER_GID} vncuser && \
     echo "vncuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vncuser && \
     chmod 0440 /etc/sudoers.d/vncuser
 
+# Configure npm and yarn for the vncuser to use a local directory for global packages.
+# This is a standard practice to avoid permission errors without using sudo.
+RUN mkdir -p /home/vncuser/.local/bin && \
+    chown -R vncuser:vncuser /home/vncuser/.local && \
+    # Configure yarn's global install location
+    su - vncuser -c "yarn config set prefix /home/vncuser/.local" && \
+    # Add environment variables to .bashrc for npm and for the PATH
+    echo '' >> /home/vncuser/.bashrc && \
+    echo '# Configure npm, yarn, and other tools to use a local directory for user installs' >> /home/vncuser/.bashrc && \
+    echo 'export NPM_CONFIG_PREFIX=/home/vncuser/.local' >> /home/vncuser/.bashrc && \
+    echo 'export PATH="/home/vncuser/.local/bin:$PATH"' >> /home/vncuser/.bashrc
+
 # Setup supervisor with correct permissions
-RUN mkdir -p /var/log/supervisor && \
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d && \
     chown -R vncuser:vncuser /var/log/supervisor && \
     chmod 755 /var/log/supervisor
 
@@ -107,13 +119,14 @@ WORKDIR /home/vncuser/workspace
 # Create a dedicated log file for CopyQ and set permissions
 RUN touch /home/vncuser/copyq.log && chown ${USER_UID}:${USER_GID} /home/vncuser/copyq.log
 
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY base.conf /etc/supervisor/conf.d/base.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY disable-screensaver.sh /home/vncuser/disable-screensaver.sh
 
 RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
     chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh /etc/supervisor/conf.d/supervisord.conf
+    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh
 
 EXPOSE 5900 6080 9223
 

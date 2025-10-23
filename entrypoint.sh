@@ -22,5 +22,5 @@ chmod 755 /var/run/dbus
 mkdir -p "$(dirname /var/run/supervisor.sock)"
 chown vncuser:vncuser "$(dirname /var/run/supervisor.sock)"
 
-# Start supervisord as root
-exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+# Start supervisord as root from its standard location
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
