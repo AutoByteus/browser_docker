@@ -18,6 +18,9 @@ mkdir -p /var/run/dbus
 chown messagebus:messagebus /var/run/dbus
 chmod 755 /var/run/dbus
 
+# FIX: Clear potential stale PID file before starting supervisord/dbus
+rm -f /run/dbus/pid
+
 # Create supervisor socket directory
 mkdir -p "$(dirname /var/run/supervisor.sock)"
 chown vncuser:vncuser "$(dirname /var/run/supervisor.sock)"

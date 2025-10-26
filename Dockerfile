@@ -20,34 +20,41 @@ RUN apt-get update && \
 # Layer 2: Install all packages
 RUN apt-get update && \
     apt-get install -y \
+    # System utilities
+    build-essential \
+    copyq \
+    dbus \
     dbus-x11 \
     dnsutils \
+    dos2unix \
+    git \
+    golang \
+    htop \
     iputils-ping \
+    jq \
+    libx11-dev \
+    libxext-dev \
+    libxtst-dev \
     net-tools \
+    ripgrep \
+    socat \
     sudo \
     supervisor \
+    unzip \
     vim \
     wget \
+    xclip \
+    # GUI and VNC
+    chromium \
     x11vnc \
     xfce4 \
     xfce4-terminal \
     xvfb \
-    libx11-dev \
-    libxext-dev \
-    libxtst-dev \
-    dbus \
-    dos2unix \
-    socat \
-    git \
-    xclip \
-    copyq \
-    chromium \
-    # Python 3.11
+    # Runtimes
+    nodejs \
     python3.11 \
     python3.11-dev \
     python3.11-venv \
-    # Node.js
-    nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Layer 3: Post-installation configuration
