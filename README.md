@@ -81,14 +81,23 @@ After building the image locally or pulling it from Docker Hub, you can easily s
     *   **VNC:** Connect your VNC client to `localhost:5900` (or your custom port). No password is required.
     *   **Chrome Debugging:** The browser's remote debugging port is available at `localhost:9223` (or your custom port).
 
-3.  **Customization and Troubleshooting Port Conflicts:**
-    If you get a "port is already allocated" error, you can specify different host ports using flags:
+3.  **Customization and Troubleshooting:**
 
+    **Screen Resolution:**
+    The default screen resolution is `1920x1080x24`. You can override this using the `--resolution` flag. The format is `WIDTHxHEIGHTxDEPTH`.
     ```bash
-    # Run VNC on host port 5901 and the debug port on 9224
+    # Run with a custom resolution of 1366x768
+    ./run-container.sh --resolution 1366x768x24
+    ```
+
+    **Port Conflicts:**
+    If you get a "port is already allocated" error, you can specify different host ports using flags:
+    ```bash
+    # Run VNC on host port 5902 and the debug port on 9224
     ./run-container.sh --vnc-port 5902 --debug-port 9224
     ```
 
+    **Other Customizations:**
     You can also specify a custom tag or container name:
     ```bash
     # Run a specific version and give the container a custom name

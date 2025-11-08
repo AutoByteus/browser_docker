@@ -8,6 +8,7 @@ ENV USER_GID=${USER_GID}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
+ENV SCREEN_RESOLUTION=1920x1080x24
 ENV XDG_RUNTIME_DIR=/run/user/${USER_UID}
 
 # Layer 1: Set up software sources
@@ -44,6 +45,7 @@ RUN apt-get update && \
     vim \
     wget \
     xclip \
+    xdotool \
     # GUI and VNC
     chromium \
     x11vnc \
@@ -130,10 +132,11 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY base.conf /etc/supervisor/conf.d/base.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY disable-screensaver.sh /home/vncuser/disable-screensaver.sh
+COPY mouse_wiggler.sh /home/vncuser/mouse_wiggler.sh
 
-RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh
+RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/mouse_wiggler.sh && \
+    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/mouse_wiggler.sh && \
+    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh /home/vncuser/mouse_wiggler.sh
 
 EXPOSE 5900 6080 9223
 

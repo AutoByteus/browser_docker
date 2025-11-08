@@ -1,10 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONFIG_DIR="$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
 
 # Disable XFCE screensaver and screen locking
-mkdir -p ~/.config/xfce4/xfconf/xfce-perchannel-xml/
+mkdir -p "${CONFIG_DIR}"
 
 # Create or update the power manager settings to disable screen locking
-cat > ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml << EOF
+cat > "${CONFIG_DIR}/xfce4-power-manager.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 <channel name="xfce4-power-manager" version="1.0">
@@ -24,7 +28,7 @@ cat > ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-power-manager.xml << EOF
 EOF
 
 # Create or update the screensaver settings to disable it
-cat > ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml << EOF
+cat > "${CONFIG_DIR}/xfce4-screensaver.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 <channel name="xfce4-screensaver" version="1.0">
@@ -39,7 +43,7 @@ cat > ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-screensaver.xml << EOF
 EOF
 
 # Disable XFCE session screensaver
-cat > ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-session.xml << EOF
+cat > "${CONFIG_DIR}/xfce4-session.xml" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 <channel name="xfce4-session" version="1.0">
@@ -86,18 +90,20 @@ EOF
 
 # Disable light locker if it's installed
 if command -v light-locker-command &> /dev/null; then
-    light-locker-command -k
-    pkill light-locker
+    light-locker-command -k || true
+    pkill light-locker || true
 fi
 
 # Make sure xscreensaver is not running if installed
 if command -v xscreensaver &> /dev/null; then
-    pkill xscreensaver
+    pkill xscreensaver || true
 fi
 
 # Additional settings to prevent screen blanking
-xset s off
-xset -dpms
-xset s noblank
+if command -v xset &> /dev/null; then
+    xset s off || true
+    xset -dpms || true
+    xset s noblank || true
+fi
 
 echo "Screen locking and screensaver have been disabled"

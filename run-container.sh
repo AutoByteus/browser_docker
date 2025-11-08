@@ -7,6 +7,7 @@ TAG="latest"
 CONTAINER_NAME="chrome-vnc"
 VNC_PORT=5900
 DEBUG_PORT=9223
+SCREEN_RESOLUTION="1920x1080x24"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -25,6 +26,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --debug-port)
       DEBUG_PORT="$2"
+      shift 2
+      ;;
+    --resolution)
+      SCREEN_RESOLUTION="$2"
       shift 2
       ;;
     *)
@@ -60,9 +65,11 @@ docker run -d \
   -p "$VNC_PORT":5900 \
   -p "$DEBUG_PORT":9223 \
   -e DISPLAY=:99 \
+  -e SCREEN_RESOLUTION="$SCREEN_RESOLUTION" \
   --restart unless-stopped \
   "$IMAGE_NAME:$TAG"
 
 echo "Container started successfully!"
 echo "VNC accessible at: localhost:$VNC_PORT (no password required)"
 echo "Chrome debugging port: $DEBUG_PORT"
+echo "Screen resolution: $SCREEN_RESOLUTION"

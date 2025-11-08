@@ -13,4 +13,5 @@ services:
       - "9223:9223"
     environment:
       - DISPLAY=:99
+      - SCREEN_RESOLUTION=1920x1080x24
     restart: unless-stopped
