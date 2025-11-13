@@ -43,6 +43,7 @@ RUN apt-get update && \
     htop \
     iputils-ping \
     jq \
+    locales \
     libx11-dev \
     libxext-dev \
     libxtst-dev \
