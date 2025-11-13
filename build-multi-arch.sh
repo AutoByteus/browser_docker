@@ -4,6 +4,7 @@ set -eo pipefail
 # Configuration
 IMAGE_NAME="autobyteus/chrome-vnc"
 PLATFORMS="linux/amd64,linux/arm64"
+VARIANT="default"
 
 # Read version from the VERSION file
 if [ ! -f VERSION ]; then
@@ -27,6 +28,10 @@ while [[ $# -gt 0 ]]; do
     --load)
       LOAD="--load"
       shift
+      ;;
+    --variant)
+      VARIANT="$2"
+      shift 2
       ;;
     *)
       echo "Unknown option: $1"
@@ -86,7 +91,20 @@ else
   echo "Building multi-architecture image for platforms: $PLATFORMS"
 fi
 
-echo "Image will be tagged as: $IMAGE_NAME:$VERSION and $IMAGE_NAME:latest"
+if [ -z "$VARIANT" ]; then
+  echo "Error: --variant requires a non-empty value."
+  exit 1
+fi
+
+if [ "$VARIANT" = "default" ]; then
+  TAG_PRIMARY="$IMAGE_NAME:$VERSION"
+  TAG_SECONDARY="$IMAGE_NAME:latest"
+else
+  TAG_PRIMARY="$IMAGE_NAME:${VERSION}-${VARIANT}"
+  TAG_SECONDARY="$IMAGE_NAME:$VARIANT"
+fi
+
+echo "Image will be tagged as: $TAG_PRIMARY and $TAG_SECONDARY"
 
 if [ -n "$PUSH" ]; then
   echo "Image will be pushed to Docker Hub"
@@ -110,16 +128,17 @@ docker buildx build \
   $LOAD \
   $NO_CACHE \
   --platform "$PLATFORMS" \
-  --tag "$IMAGE_NAME:$VERSION" \
-  --tag "$IMAGE_NAME:latest" \
+  --tag "$TAG_PRIMARY" \
+  --tag "$TAG_SECONDARY" \
+  --build-arg IMAGE_VARIANT="$VARIANT" \
   .
 
 echo "Build completed successfully!"
 if [ -n "$PUSH" ]; then
-  echo "Multi-architecture image pushed to Docker Hub with tags $VERSION and latest."
+  echo "Multi-architecture image pushed to Docker Hub with tags $TAG_PRIMARY and $TAG_SECONDARY."
   echo "Users can now pull this image on any supported platform."
 elif [ -n "$LOAD" ]; then
-  echo "Image loaded into local Docker daemon with tags $VERSION and latest."
+  echo "Image loaded into local Docker daemon with tags $TAG_PRIMARY and $TAG_SECONDARY."
   echo "You can check with 'docker images' and run it locally."
 else
   echo "Image built to cache. Use --push to publish to Docker Hub or --load to use it locally."

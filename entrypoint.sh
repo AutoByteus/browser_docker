@@ -12,6 +12,7 @@ mkdir -p ${XDG_RUNTIME_DIR}
 mkdir -p ${XDG_RUNTIME_DIR}/dconf
 chown -R vncuser:vncuser ${XDG_RUNTIME_DIR}
 chmod -R 700 ${XDG_RUNTIME_DIR}
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
 
 # DBus configuration
 mkdir -p /var/run/dbus

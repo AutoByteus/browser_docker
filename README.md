@@ -9,6 +9,7 @@ This repository contains a Docker setup for a browser environment with VNC acces
 - VNC server for remote desktop access
 - Screen lock/screensaver disabled for uninterrupted operation
 - Multi-architecture support (AMD64 and ARM64)
+- Optional `zh` locale tag with Chinese fonts installed and fcitx5 enabled (English keyboard stays default; toggle Chinese with `Ctrl+Space`).
 
 ## Prerequisites
 
@@ -18,7 +19,7 @@ This project uses Docker BuildX to create images that run on both Intel/AMD (amd
 
 ## Building the Image
 
-The included `build-multi-arch.sh` script automates the build process.
+The included `build-multi-arch.sh` script automates the build process and can now produce both the default (English) image and a `zh` variant with Chinese fonts/input pre-configured.
 
 1.  **Set the Version**: Before building, update the `VERSION` file in this directory with the desired semantic version (e.g., `1.2.0`). This file is the single source of truth for versioning.
 
@@ -44,6 +45,20 @@ The included `build-multi-arch.sh` script automates the build process.
     # Perform a clean build with no cache
     ./build-multi-arch.sh --no-cache
     ```
+
+### Building the Chinese (`zh`) Variant
+
+Pass `--variant zh` to the build script to install Chinese fonts, locales, and fcitx5. The script automatically tags the result as `autobyteus/chrome-vnc:<version>-zh` and `autobyteus/chrome-vnc:zh`.
+
+```bash
+# Build the zh variant for your local architecture and load it into Docker
+./build-multi-arch.sh --variant zh
+
+# Build multi-arch zh images and push them
+./build-multi-arch.sh --variant zh --push
+```
+
+Inside the zh image, English remains the default input method. Users can press `Ctrl+Space` (fcitx default) or click the fcitx tray icon to toggle Chinese Pinyin input and render Chinese websites with preinstalled fonts.
 
 ### First-Time BuildX Setup / Troubleshooting
 
@@ -80,6 +95,7 @@ After building the image locally or pulling it from Docker Hub, you can easily s
 2.  **Accessing the Container:** Once started, you can access the container's desktop environment:
     *   **VNC:** Connect your VNC client to `localhost:5900` (or your custom port). No password is required.
     *   **Chrome Debugging:** The browser's remote debugging port is available at `localhost:9223` (or your custom port).
+    *   **Chinese Input (zh tag only):** fcitx5 autostarts in the panel; press `Ctrl+Space` to toggle between the default English keyboard and Chinese Pinyin, or click the fcitx icon to pick another layout.
 
 3.  **Customization and Troubleshooting:**
 
@@ -102,4 +118,7 @@ After building the image locally or pulling it from Docker Hub, you can easily s
     ```bash
     # Run a specific version and give the container a custom name
     ./run-container.sh --tag 1.2.0 --name my-custom-container
+
+    # Run the Chinese-enabled image (built or pulled as autobyteus/chrome-vnc:zh)
+    ./run-container.sh --tag zh
     ```

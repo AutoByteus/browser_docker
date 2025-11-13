@@ -3,17 +3,27 @@ FROM ubuntu:22.04
 
 ARG USER_UID=1000
 ARG USER_GID=1000
+ARG IMAGE_VARIANT=default
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
+ENV IMAGE_VARIANT=${IMAGE_VARIANT}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:99
 ENV SCREEN_RESOLUTION=1920x1080x24
 ENV XDG_RUNTIME_DIR=/run/user/${USER_UID}
+ENV GTK_IM_MODULE=fcitx
+ENV QT_IM_MODULE=fcitx
+ENV XMODIFIERS=@im=fcitx
+ENV SDL_IM_MODULE=fcitx
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
 # Layer 1: Set up software sources
 RUN apt-get update && \
     apt-get install -y software-properties-common ca-certificates curl && \
+    add-apt-repository -y universe && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     add-apt-repository -y ppa:xtradeb/apps && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
@@ -57,7 +67,70 @@ RUN apt-get update && \
     python3.11 \
     python3.11-dev \
     python3.11-venv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && if [ "${IMAGE_VARIANT}" = "zh" ]; then \
+        apt-get install -y \
+        # Fonts and locales
+        fonts-noto-cjk \
+        fonts-noto-color-emoji \
+        fonts-wqy-zenhei \
+        language-pack-zh-hans \
+        language-pack-zh-hant \
+        # Input method tooling
+        fcitx5 \
+        fcitx5-chinese-addons \
+        fcitx5-frontend-gtk3 \
+        fcitx5-frontend-qt5 \
+        fcitx5-config-qt \
+        im-config \
+        ; \
+    fi && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ensure en_US locale exists for all variants
+RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
+
+# Create non-root user with explicit UID/GID and add to sudo group (needed before variant-specific setup)
+RUN groupadd -g ${USER_GID} vncuser && \
+    useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash vncuser && \
+    usermod -aG sudo vncuser && \
+    echo "vncuser:vncuser" | chpasswd && \
+    echo "vncuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vncuser && \
+    chmod 0440 /etc/sudoers.d/vncuser && \
+    touch /home/vncuser/.xprofile && \
+    chown ${USER_UID}:${USER_GID} /home/vncuser/.xprofile && \
+    chmod 644 /home/vncuser/.xprofile
+
+# Layer 2.5: Configure Chinese locale/input when requested
+RUN if [ "${IMAGE_VARIANT}" = "zh" ]; then \
+        locale-gen en_US.UTF-8 zh_CN.UTF-8 zh_TW.UTF-8 && \
+        update-locale LANG=en_US.UTF-8 && \
+        su - vncuser -c "im-config -n fcitx5" && \
+        su - vncuser -c "mkdir -p ~/.config/fcitx5/conf ~/.config/autostart" && \
+        printf '%s\n' \
+'export GTK_IM_MODULE=fcitx' \
+'export QT_IM_MODULE=fcitx' \
+'export XMODIFIERS=@im=fcitx' \
+'export SDL_IM_MODULE=fcitx' \
+        >> /home/vncuser/.xprofile && \
+        printf '%s\n' \
+'[Groups]' \
+'0=Default' \
+'Number=1' \
+'' \
+'[Groups/0]' \
+'Name=Default' \
+'Default Layout=us' \
+'' \
+'[Groups/0/Items/0]' \
+'Name=keyboard-us' \
+'Layout=us' \
+'Default=True' \
+'' \
+'[Groups/0/Items/1]' \
+'Name=pinyin' \
+        > /home/vncuser/.config/fcitx5/profile && \
+        chown -R vncuser:vncuser /home/vncuser/.config/fcitx5; \
+    fi
 
 # Layer 3: Post-installation configuration
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
@@ -66,14 +139,6 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
     python3 -m pip install --upgrade pip wheel setuptools && \
     python3 -m pip install websockify uv && \
     npm install -g yarn
-
-# Create non-root user with explicit UID/GID and add to sudo group
-RUN groupadd -g ${USER_GID} vncuser && \
-    useradd -u ${USER_UID} -g ${USER_GID} -m -s /bin/bash vncuser && \
-    usermod -aG sudo vncuser && \
-    echo "vncuser:vncuser" | chpasswd && \
-    echo "vncuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vncuser && \
-    chmod 0440 /etc/sudoers.d/vncuser
 
 # Configure npm and yarn for the vncuser to use a local directory for global packages.
 # This is a standard practice to avoid permission errors without using sudo.
