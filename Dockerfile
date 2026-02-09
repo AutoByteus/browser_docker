@@ -59,10 +59,9 @@ RUN apt-get update && \
     xdotool \
     # GUI and VNC
     chromium \
-    x11vnc \
+    tigervnc-standalone-server \
     xfce4 \
     xfce4-terminal \
-    xvfb \
     # Runtimes
     nodejs \
     python3.11 \

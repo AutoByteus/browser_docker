@@ -6,7 +6,7 @@ This repository contains a Docker setup for a browser environment with VNC acces
 - Ubuntu 22.04 with XFCE4 desktop environment
 - Chromium browser pre-installed and configured
 - Python 3.11, Node.js 22, and Yarn
-- VNC server for remote desktop access
+- TigerVNC (`Xvnc`) server for remote desktop access
 - Screen lock/screensaver disabled for uninterrupted operation
 - Multi-architecture support (AMD64 and ARM64)
 - Optional `zh` locale tag with Chinese fonts installed and fcitx5 enabled (English keyboard stays default; toggle Chinese with `Ctrl+Space`).
@@ -93,7 +93,7 @@ After building the image locally or pulling it from Docker Hub, you can easily s
     ```
 
 2.  **Accessing the Container:** Once started, you can access the container's desktop environment:
-    *   **VNC:** Connect your VNC client to `localhost:5900` (or your custom port). No password is required.
+    *   **VNC (TigerVNC/Xvnc):** Connect your VNC client to `localhost:5900` (or your custom port). No password is required.
     *   **Chrome Debugging:** The browser's remote debugging port is available at `localhost:9223` (or your custom port).
     *   **Chinese Input (zh tag only):** fcitx5 autostarts in the panel; press `Ctrl+Space` to toggle between the default English keyboard and Chinese Pinyin, or click the fcitx icon to pick another layout.
 
