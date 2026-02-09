@@ -49,6 +49,7 @@ RUN apt-get update && \
     libxtst-dev \
     net-tools \
     ripgrep \
+    scrot \
     socat \
     sudo \
     supervisor \
