@@ -197,11 +197,12 @@ RUN touch /home/vncuser/copyq.log && chown ${USER_UID}:${USER_GID} /home/vncuser
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY base.conf /etc/supervisor/conf.d/base.conf
 COPY entrypoint.sh /entrypoint.sh
+COPY start-vnc.sh /usr/local/bin/start-vnc.sh
 COPY disable-screensaver.sh /home/vncuser/disable-screensaver.sh
 
-RUN dos2unix /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chmod +x /entrypoint.sh /home/vncuser/disable-screensaver.sh && \
-    chown vncuser:vncuser /entrypoint.sh /home/vncuser/disable-screensaver.sh
+RUN dos2unix /entrypoint.sh /usr/local/bin/start-vnc.sh /home/vncuser/disable-screensaver.sh && \
+    chmod +x /entrypoint.sh /usr/local/bin/start-vnc.sh /home/vncuser/disable-screensaver.sh && \
+    chown vncuser:vncuser /entrypoint.sh /usr/local/bin/start-vnc.sh /home/vncuser/disable-screensaver.sh
 
 EXPOSE 5900 6080 9223
 

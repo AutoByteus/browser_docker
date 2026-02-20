@@ -122,3 +122,25 @@ After building the image locally or pulling it from Docker Hub, you can easily s
     # Run the Chinese-enabled image (built or pulled as autobyteus/chrome-vnc:zh)
     ./run-container.sh --tag zh
     ```
+
+## Reliable Recovery After Host/Daemon Restart
+
+If a container is stopped abruptly (power loss, daemon crash), VNC can fail to come back with:
+
+```text
+Server is already active for display 99
+```
+
+Root cause is usually stale X lock/socket files:
+- `/tmp/.X99-lock`
+- `/tmp/.X11-unix/X99`
+
+This image now starts TigerVNC via `/usr/local/bin/start-vnc.sh`, which removes stale lock/socket files when they are not owned by a live X server process.
+
+For already-running older containers (built before this fix), recover manually:
+
+```bash
+docker exec <container> sh -lc 'rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 && supervisorctl restart tigervnc xfce chrome copyq'
+```
+
+To make recovery permanent, rebuild/pull the updated image and recreate containers.
